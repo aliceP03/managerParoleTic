@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Manager</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <h1>Password Manager</h1>
+
+  <!-- Display passwords -->
+  <div id="passwords">
+    <p>Loading passwords...</p>
+  </div>
+
+  <!-- Add password -->
+  <h2>Add Password</h2>
+  <input type="text" id="site" placeholder="Site/App">
+  <input type="text" id="username" placeholder="Username">
+  <input type="text" id="password" placeholder="Password">
+  <input type="text" id="category" placeholder="Category">
+  <button id="add-password">Add Password</button>
+
+  <!-- Update password -->
+  <h2>Update Password</h2>
+  <input type="number" id="update-id" placeholder="ID">
+  <input type="text" id="update-site" placeholder="Site/App">
+  <input type="text" id="update-username" placeholder="Username">
+  <input type="text" id="update-password" placeholder="Password">
+  <input type="text" id="update-category" placeholder="Category">
+  <button id="update-password-btn">Update Password</button>
+
+  <!-- Delete password -->
+  <h2>Delete Password</h2>
+  <input type="number" id="delete-id" placeholder="ID">
+  <button id="delete-password-btn">Delete Password</button>
+
+  <script src="js/main.js" defer></script>
+</body>
+</html>
