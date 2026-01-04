@@ -1,5 +1,6 @@
 const API_BASE_URL = 'http://localhost:8080';
-
+// Cheia pentru criptare - demonstrativ
+const secretKey = "my-super-secret-key"; 
 const passwordsContainer = document.getElementById('passwords');
 const addButton = document.getElementById('add-password');
 const siteInput = document.getElementById('site');
@@ -44,15 +45,34 @@ async function getPasswords() {
   const data = await res.json();
   displayPasswords(data);
 }
+function displayPasswords(data) {
+    passwordsContainer.innerHTML = '';
+    if (!data || data.length === 0) {
+        passwordsContainer.innerHTML = '<p>No passwords</p>';
+        return;
+    }
+    data.forEach(p => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <p>ID: ${p.id}</p>
+            <p>Site: ${p.site}</p>
+            <p>Username: ${p.username}</p>
+            <p>Password: ${decryptPassword(p.passwordEncrypted)}</p>
+            <p>Category: ${p.category}</p>
+            <hr>
+        `;
+        passwordsContainer.appendChild(div);
+    });
+}
 
 // POST
 async function addPassword() {
   const newPass = {
     site: siteInput.value,
     username: usernameInput.value,
-    passwordEncrypted: passwordInput.value,
+    passwordEncrypted: encryptPassword(passwordInput.value),
     category: categoryInput.value || 'General'
-  };
+};
   if (!newPass.site || !newPass.username || !newPass.passwordEncrypted) {
     alert('Site, username and password required');
     return;
@@ -104,3 +124,12 @@ deleteButton.addEventListener('click', deletePassword);
 
 // Load passwords on start
 getPasswords();
+
+function encryptPassword(password) {
+    return CryptoJS.AES.encrypt(password, secretKey).toString();
+}
+
+function decryptPassword(cipherText) {
+    const bytes = CryptoJS.AES.decrypt(cipherText, secretKey);
+    return bytes.toString(CryptoJS.enc.Utf8);
+}
