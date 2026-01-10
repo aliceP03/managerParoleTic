@@ -8,6 +8,20 @@
 </head>
 <body>
   <h1>Password Manager</h1>
+  <h2>Register</h2>
+<input type="email" id="register-email" placeholder="Email">
+<input type="password" id="register-password" placeholder="Password">
+<button id="register-btn">Register</button>
+<p id="register-status"></p>
+
+  <h2>Login</h2>
+<input type="email" id="login-email" placeholder="Email">
+<input type="password" id="login-password" placeholder="Password">
+<button id="login-btn">Login</button>
+
+<p id="login-status"></p>
+
+<button id="logout-btn" onclick="logout()">Log Out</button>
 
   <!-- Display passwords -->
   <div id="passwords">

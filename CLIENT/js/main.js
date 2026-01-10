@@ -7,23 +7,122 @@ const siteInput = document.getElementById('site');
 const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 const categoryInput = document.getElementById('category');
-
 const updateButton = document.getElementById('update-password-btn');
 const updateIdInput = document.getElementById('update-id');
 const updateSiteInput = document.getElementById('update-site');
 const updateUsernameInput = document.getElementById('update-username');
 const updatePasswordInput = document.getElementById('update-password');
 const updateCategoryInput = document.getElementById('update-category');
-
 const deleteButton = document.getElementById('delete-password-btn');
 const deleteIdInput = document.getElementById('delete-id');
+const loginBtn = document.getElementById("login-btn");
+const loginEmail = document.getElementById("login-email");
+const loginPassword = document.getElementById("login-password");
+const loginStatus = document.getElementById("login-status");
+const registerBtn = document.getElementById("register-btn");
+const registerEmail = document.getElementById("register-email");
+const registerPassword = document.getElementById("register-password");
+const registerStatus = document.getElementById("register-status");
+const logoutBtn = document.getElementById("logout-btn");
 
+async function register() {
+  const email = registerEmail.value;
+  const password = registerPassword.value;
+
+  if(!email || !password){
+    alert("Enter email and password");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/register`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+      registerStatus.textContent = data.error;
+      registerStatus.style.color = "red";
+      return;
+    }
+
+    registerStatus.textContent = "Account created!";
+    registerStatus.style.color = "green";
+
+  } catch(err){
+    registerStatus.textContent = "Register failed";
+    registerStatus.style.color = "red";
+  }
+}
+
+registerBtn.addEventListener("click", register);
+
+
+//LOGIN
+async function login() {
+    const email = loginEmail.value;
+    const password = loginPassword.value;
+
+    const response = await fetch(`${API_BASE_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        // Salvezi token-ul
+        localStorage.setItem("token", data.token);
+        loginStatus.innerText = "Logat cu succes!";
+        
+        // ACUM FACI GET-ul pentru parole
+        getPasswords(); 
+    } else {
+        loginStatus.innerText = "Eroare: " + data.error;
+    }
+}
+
+//LOGOUT
+function logout() {
+    // Ștergem token-ul din stocarea locală
+    localStorage.removeItem("token");
+        alert("Te-ai delogat cu succes!");
+        location.reload(); // Refresh la pagină pentru a goli lista de parole
+}
 
 // GET all
 async function getPasswords() {
-  const res = await fetch(`${API_BASE_URL}/passwords`);
-  const data = await res.json();
-  displayPasswords(data);
+    const token = localStorage.getItem("token");
+    
+    // Verificăm dacă avem token înainte de a face cererea
+    if (!token) {
+        passwordsContainer.innerHTML = "<p>Te rugăm să te loghezi pentru a vedea parolele.</p>";
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/passwords`, {
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+
+        if (res.status === 401 || res.status === 403) {
+            passwordsContainer.innerHTML = "<p>Sesiune expirată. Te rugăm să te reloghezi.</p>";
+            localStorage.removeItem("token"); // Curățăm token-ul vechi
+            return;
+        }
+
+        const data = await res.json();
+        displayPasswords(data);
+    } catch (error) {
+        console.error("Eroare la preluarea parolelor:", error);
+        passwordsContainer.innerHTML = "<p>Eroare de conexiune la server.</p>";
+    }
 }
 function displayPasswords(data) {
     passwordsContainer.innerHTML = '';
@@ -72,8 +171,12 @@ function attachActionButtons() {
             if (!confirm("Esti sigur ca vrei sa stergi parola?")) return;
 
             await fetch(`${API_BASE_URL}/passwords/${id}`, {
-                method: "DELETE"
-            });
+              method: "DELETE",
+              headers: {
+                "Authorization": "Bearer " + localStorage.getItem("token")
+  }
+});
+
 
             getPasswords();
         });
@@ -106,7 +209,10 @@ async function addPassword() {
   }
   await fetch(`${API_BASE_URL}/passwords`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem("token")
+    },
     body: JSON.stringify(newPass)
   });
   siteInput.value = usernameInput.value = passwordInput.value = categoryInput.value = '';
@@ -127,13 +233,17 @@ async function updatePassword() {
 
   await fetch(`${API_BASE_URL}/passwords/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem("token")
+    },
     body: JSON.stringify(updated)
-  });
+});
+
   
   updateIdInput.value = '';
   updateUsernameInput.value = '';
-updatePasswordInput.value = '';
+  updatePasswordInput.value = '';
 
   getPasswords();
 }
@@ -142,7 +252,13 @@ updatePasswordInput.value = '';
 async function deletePassword() {
   const id = deleteIdInput.value;
   if (!id) { alert('Enter ID'); return; }
-  await fetch(`${API_BASE_URL}/passwords/${id}`, { method: 'DELETE' });
+  await fetch(`${API_BASE_URL}/passwords/${id}`, {
+  method: "DELETE",
+  headers: {
+    "Authorization": "Bearer " + localStorage.getItem("token")
+  }
+});
+
   deleteIdInput.value = '';
   getPasswords();
 }
@@ -151,6 +267,8 @@ async function deletePassword() {
 addButton.addEventListener('click', addPassword);
 updateButton.addEventListener('click', updatePassword);
 deleteButton.addEventListener('click', deletePassword);
+loginBtn.addEventListener("click", login);
+logoutBtn.addEventListener("click", logout);
 
 // Load passwords on start
 getPasswords();
